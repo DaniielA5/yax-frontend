@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YAX — Sistema de Ventas</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- PANTALLA 1: ABRIR SESIÓN -->
+  <div id="pantalla-sesion" class="pantalla activa">
+    <div class="card">
+      <h1>YAX</h1>
+      <h2>Abrir Caja</h2>
+      <input type="text" id="input-usuario" placeholder="Nombre del cajero" />
+      <input type="number" id="input-monto" placeholder="Fondo inicial ($)" min="0" />
+      <button id="btn-abrir-sesion">Abrir Sesión</button>
+      <p id="error-sesion" class="error oculto"></p>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: PANEL PRINCIPAL -->
+  <div id="pantalla-principal" class="pantalla oculto">
+    <header>
+      <span id="info-sesion">Sesión activa</span>
+      <button id="btn-cerrar-sesion" class="btn-danger">Cerrar Caja</button>
+    </header>
+
+    <main>
+      <section class="formulario-venta">
+        <h2>Nueva Venta</h2>
+        <div id="lista-productos"></div>
+        <button id="btn-agregar-producto">+ Agregar producto</button>
+        <div class="total-venta">
+          <span>Total: $<span id="total-venta">0.00</span></span>
+        </div>
+        <button id="btn-registrar-venta">Registrar y Cobrar</button>
+        <p id="error-venta" class="error oculto"></p>
+      </section>
+
+      <section class="formulario-gasto">
+         <h2>Registrar Gasto</h2>
+        <select id="select-categoria"></select>
+        <input type="number" id="input-monto-gasto" placeholder="Monto $" min="0"/>
+        <input type="text" id="input-descripcion-gasto" placeholder="Descripción (opcional)"/>
+        <button id="btn-registrar-gasto">Registrar Gasto</button>
+        <p id="error-gasto" class="error oculto"></p>
+      </section>
+
+      <section id="historial-sesion" class="historial">
+        <h2>Ventas de esta sesión</h2>
+        <div id="lista-historial">
+          <p class="vacio">Sin ventas aún</p>
+        </div>
+      </section>
+      
+      <section class="resumen-caja">
+        <h2>Resumen de Caja</h2>
+        <div id="resumen-contenido">
+          <p>Ingresos: $<span id="resumen-ingresos">0.00</span></p>
+          <p>Egresos: $<span id="resumen-egresos">0.00</span></p>
+          <p><strong>En caja: $<span id="resumen-total">0.00</span></strong></p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
