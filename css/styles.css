@@ -211,4 +211,79 @@ select:focus { border-color: #fdc344; }
   justify-content: flex-start;
   align-items: stretch;
 }
+
+.cierre-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cierre-card h1 {
+  font-size: 2rem;
+  color: #a78bfa;
+  text-align: center;
+  letter-spacing: 4px;
+}
+
+.cierre-card h2 {
+  text-align: center;
+  color: #888;
+  font-weight: 400;
+}
+
+.cierre-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: #111;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.cierre-info span:nth-child(even) {
+  text-align: right;
+  color: #f0f0f0;
+}
+
+.cierre-numeros {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cierre-fila {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #111;
+}
+
+.cierre-fila.ingreso span:last-child { color: #4ade80; }
+.cierre-fila.egreso span:last-child { color: #ef4444; }
+.cierre-fila.total {
+  border: 1px solid #a78bfa;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.cierre-fila.total span:last-child { color: #a78bfa; }
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #444;
+  color: #888;
+}
+.btn-secondary:hover {
+  background: #222;
+  color: #f0f0f0;
+}
+
 .btn-quitar:hover{background: #f87171;}

@@ -179,28 +179,51 @@ if (hayIdVacio) return mostrarError('error-venta', 'Todos los productos deben te
 
 // --- CERRAR SESIÓN ---
 $('btn-cerrar-sesion').addEventListener('click', async () => {
-  const confirmar = confirm('¿Cerrar la caja? Esta acción no se puede deshacer.');
-  if (!confirmar) return;
-
   try {
-    const resumen = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
-    const data = await resumen.json();
+    const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
+    const data = await res.json();
+
+    // Llenar pantalla de cierre
+    $('cierre-usuario').textContent = data.usuario;
+    $('cierre-sesion').textContent = `#${sesionActual.id}`;
+    $('cierre-inicio').textContent = new Date(data.fecha_inicio).toLocaleString();
+    $('cierre-fondo').textContent = `$${parseFloat(data.monto_inicial).toFixed(2)}`;
+    $('cierre-ingresos').textContent = `$${parseFloat(data.total_ingresos).toFixed(2)}`;
+    $('cierre-egresos').textContent = `$${parseFloat(data.total_egresos).toFixed(2)}`;
+    $('cierre-total').textContent = `$${parseFloat(data.debe_haber_en_caja).toFixed(2)}`;
+
+    irA('pantalla-cierre');
+  } catch (e) {
+    alert('Error al cargar resumen de cierre');
+  }
+});
+
+$('btn-confirmar-cierre').addEventListener('click', async () => {
+  try {
+    const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
+    const data = await res.json();
 
     const resCierre = await fetch(`${API}/sesion/cerrar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_sesion: sesionActual.id, monto_final_real: data.debe_haber_en_caja })
+      body: JSON.stringify({
+        id_sesion: sesionActual.id,
+        monto_final_real: data.debe_haber_en_caja
+      })
     });
+
     const dataCierre = await resCierre.json();
     if (!resCierre.ok) return alert(dataCierre.error);
-
-    alert(`Caja cerrada. En caja: $${data.debe_haber_en_caja}`);
-    sesionActual = null;
-    localStorage.removeItem('sesionActual'); // agrega esto  
-      irA('pantalla-sesion');
+        sesionActual = null;
+    localStorage.removeItem('sesionActual');
+    irA('pantalla-sesion');
   } catch (e) {
     alert('Error al cerrar sesión');
   }
+});
+
+$('btn-cancelar-cierre').addEventListener('click', () => {
+  irA('pantalla-principal');
 });
 
 
@@ -276,7 +299,7 @@ const actualizarHistorial = async () => {
             <tr>
               <td>${v.id_venta}</td>
               <td>${new Date(v.fecha).toLocaleTimeString()}</td>
-              <td>—</td>
+              <td>${v.productos || '—'}</td>
               <td>$${parseFloat(v.total).toFixed(2)}</td>
               <td class="estado-${v.estado}">${v.estado}</td>
               <td>${v.nota || '—'}</td>

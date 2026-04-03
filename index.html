@@ -27,6 +27,42 @@
       <button id="btn-cerrar-sesion" class="btn-danger">Cerrar Caja</button>
     </header>
 
+ <!-- PANTALLA 3: CIERRE DE SESIÓN -->
+<div id="pantalla-cierre" class="pantalla oculto">
+  <div class="cierre-card">
+    <h1>YAX</h1>
+    <h2>Resumen de Cierre</h2>
+
+    <div class="cierre-info">
+      <span>Cajero</span><span id="cierre-usuario">—</span>
+      <span>Sesión</span><span id="cierre-sesion">—</span>
+      <span>Inicio</span><span id="cierre-inicio">—</span>
+    </div>
+
+    <div class="cierre-numeros">
+      <div class="cierre-fila">
+        <span>Fondo inicial</span>
+        <span id="cierre-fondo">$0.00</span>
+      </div>
+      <div class="cierre-fila ingreso">
+        <span>Total ingresos</span>
+        <span id="cierre-ingresos">$0.00</span>
+      </div>
+      <div class="cierre-fila egreso">
+        <span>Total egresos</span>
+        <span id="cierre-egresos">$0.00</span>
+      </div>
+      <div class="cierre-fila total">
+        <span>Debe haber en caja</span>
+        <span id="cierre-total">$0.00</span>
+      </div>
+    </div>
+
+    <button id="btn-confirmar-cierre">Confirmar Cierre</button>
+    <button id="btn-cancelar-cierre" class="btn-secondary">Cancelar</button>
+  </div>
+</div>
+
     <main>
       <section class="formulario-venta">
         <h2>Nueva Venta</h2>
@@ -48,19 +84,19 @@
         <p id="error-gasto" class="error oculto"></p>
       </section>
 
-      <section id="historial-sesion" class="historial">
-        <h2>Ventas de esta sesión</h2>
-        <div id="lista-historial">
-          <p class="vacio">Sin ventas aún</p>
-        </div>
-      </section>
-      
       <section class="resumen-caja">
         <h2>Resumen de Caja</h2>
         <div id="resumen-contenido">
           <p>Ingresos: $<span id="resumen-ingresos">0.00</span></p>
           <p>Egresos: $<span id="resumen-egresos">0.00</span></p>
           <p><strong>En caja: $<span id="resumen-total">0.00</span></strong></p>
+        </div>
+      </section>
+
+      <section id="historial-sesion" class="historial">
+        <h2>Ventas de esta sesión</h2>
+        <div id="lista-historial">
+          <p class="vacio">Sin ventas aún</p>
         </div>
       </section>
     </main>
