@@ -22,15 +22,30 @@ const irA = pantalla => {
   destino.classList.add('activa');
 };
 
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
   if (sesionActual) {
+    try{
+      const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
+      const data = await res.json();
+
+      if(data.estado === 'CERRADA' || !res.ok){
+        localStorage.removeItem('sesionActual');
+        sesionActual = null ;
+        irA('pantalla-sesion');
+        return ; 
+      } 
     $('info-sesion').textContent = `Cajero: ${sesionActual.usuario} | Sesión #${sesionActual.id}`;
     irA('pantalla-principal');
     actualizarResumen();
     cargarCatalogo();
     actualizarHistorial()
     cargarCategorias();
+  }catch(e){
+    localStorage.removeItem('sesionactual');
+    sesionActual = null ; 
+    irA('pantalla-sesion');
   }
+}
 });
 // --- ABRIR SESIÓN ---
 $('btn-abrir-sesion').addEventListener('click', async () => {
@@ -171,6 +186,7 @@ if (hayIdVacio) return mostrarError('error-venta', 'Todos los productos deben te
     
     renderizarProductos();
     actualizarResumen();
+    actualizarHistorial();
     alert(` Venta registrada — Total: $${dataVenta.total}`);
   } catch (e) {
     mostrarError('error-venta', 'Error al conectar con el servidor');
@@ -179,22 +195,31 @@ if (hayIdVacio) return mostrarError('error-venta', 'Todos los productos deben te
 
 // --- CERRAR SESIÓN ---
 $('btn-cerrar-sesion').addEventListener('click', async () => {
+  const confirmar = confirm('¿Cerrar la caja? Esta acción no se puede deshacer.');
+  if (!confirmar) return;
+
   try {
-    const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
-    const data = await res.json();
+    const resumen = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
+    const data = await resumen.json();
 
-    // Llenar pantalla de cierre
-    $('cierre-usuario').textContent = data.usuario;
-    $('cierre-sesion').textContent = `#${sesionActual.id}`;
-    $('cierre-inicio').textContent = new Date(data.fecha_inicio).toLocaleString();
-    $('cierre-fondo').textContent = `$${parseFloat(data.monto_inicial).toFixed(2)}`;
-    $('cierre-ingresos').textContent = `$${parseFloat(data.total_ingresos).toFixed(2)}`;
-    $('cierre-egresos').textContent = `$${parseFloat(data.total_egresos).toFixed(2)}`;
-    $('cierre-total').textContent = `$${parseFloat(data.debe_haber_en_caja).toFixed(2)}`;
+    const resCierre = await fetch(`${API}/sesion/cerrar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_sesion: sesionActual.id, monto_final_real: data.debe_haber_en_caja })
+    });
+    const dataCierre = await resCierre.json();
 
-    irA('pantalla-cierre');
+    if (!resCierre.ok) {
+      alert(dataCierre.error);
+    } else {
+      alert(`Caja cerrada. En caja: $${data.debe_haber_en_caja}`);
+    }
   } catch (e) {
-    alert('Error al cargar resumen de cierre');
+    alert('Error al conectar con el servidor');
+  } finally {
+    sesionActual = null;
+    localStorage.removeItem('sesionActual');
+    irA('pantalla-sesion');
   }
 });
 
@@ -282,32 +307,111 @@ const actualizarHistorial = async () => {
       return;
     }
 
-         lista.innerHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Hora</th>
-            <th>Productos</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${ventas.map(v => `
+        lista.innerHTML = `
+        <table>
+          <thead>
             <tr>
-              <td>${v.id_venta}</td>
-              <td>${new Date(v.fecha).toLocaleTimeString()}</td>
-              <td>${v.productos || '—'}</td>
-              <td>$${parseFloat(v.total).toFixed(2)}</td>
-              <td class="estado-${v.estado}">${v.estado}</td>
-              <td>${v.nota || '—'}</td>
+              <th>#</th>
+              <th>Hora</th>
+              <th>Productos</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th></th>
             </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+          </thead>
+          <tbody>
+            ${ventas.map(v => `
+              <tr>
+                <td>${v.id_venta}</td>
+                <td>${new Date(v.fecha).toLocaleTimeString()}</td>
+                <td style="font-size:0.8rem; color:#aaa">
+                  ${v.productos.map(p => `${p.nombre} x${p.cantidad}`).join(', ')}
+                </td>
+                <td>$${parseFloat(v.total).toFixed(2)}</td>
+                <td class="estado-${v.estado}">${v.estado}</td>
+                <td>
+                  ${v.estado === 'PAGADA' 
+                    ? `<button 
+                        onclick='abrirModalDevolucion(${JSON.stringify(v)})' 
+                        style="padding:4px 10px; font-size:0.8rem; background:#3b82f6">
+                        Devolver
+                      </button>` 
+                    : '—'}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
   } catch (e) {
     console.error('Error al cargar historial', e);
   }};
+
+
+  // --- DEVOLUCIONES ---
+let ventaParaDevolver = null;
+
+const abrirModalDevolucion = (venta) => {
+  ventaParaDevolver = venta;
+  $('modal-venta-info').textContent = `Venta #${venta.id_venta} — Total: $${parseFloat(venta.total).toFixed(2)}`;
+
+  const contenedor = $('modal-productos-devolucion');
+  contenedor.innerHTML = venta.productos.map((p, i) => `
+    <div class="devolucion-item">
+      <span>${p.nombre}</span>
+      <span style="color:#888">x${p.cantidad} — $${parseFloat(p.precio_unitario).toFixed(2)}</span>
+      <input 
+        type="number" 
+        min="0" 
+        max="${p.cantidad}" 
+        value="0"
+        id="dev-cantidad-${i}"
+        placeholder="0"
+      />
+    </div>
+  `).join('');
+
+  $('modal-devolucion').classList.remove('oculto');
+};
+
+$('btn-cancelar-devolucion').addEventListener('click', () => {
+  $('modal-devolucion').classList.add('oculto');
+  ventaParaDevolver = null;
+});
+
+$('btn-confirmar-devolucion').addEventListener('click', async () => {
+  const productos = ventaParaDevolver.productos
+    .map((p, i) => ({
+      id_producto: p.id_producto,
+      cantidad: parseInt($(`dev-cantidad-${i}`).value) || 0,
+      precio_unitario: parseFloat(p.precio_unitario)
+    }))
+    .filter(p => p.cantidad > 0);  // solo los que tienen cantidad > 0
+
+  if (productos.length === 0) {
+    return mostrarError('error-devolucion', 'Ingresa al menos una cantidad a devolver');
+  }
+
+  try {
+    const res = await fetch(`${API}/venta/${ventaParaDevolver.id_venta}/devolucion`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_sesion: sesionActual.id,
+        motivo: 'Devolución registrada desde caja',
+        productos,
+        id_metodo_pago: 1
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) return mostrarError('error-devolucion', data.error);
+
+    $('modal-devolucion').classList.add('oculto');
+    ventaParaDevolver = null;
+    actualizarResumen();
+    actualizarHistorial();
+    alert(`Devolución registrada — $${data.total_devuelto} devueltos`);
+  } catch (e) {
+    mostrarError('error-devolucion', 'Error al conectar con el servidor');
+  }
+});

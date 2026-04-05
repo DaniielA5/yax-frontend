@@ -106,6 +106,18 @@ main {
   margin: 0 auto;
 }
 
+.resumen-caja {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;  
+  grid-row: 1 / 2;
+  grid-column: 3 / 4;
+
+}
 .formulario-gasto {
   background:#1a1a1a;
   border: 1px solid #2a2a2a;
@@ -114,15 +126,21 @@ main {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
 }
-.formulario-venta, .resumen-caja {
+
+.formulario-venta{
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 16px;  
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+
 }
 
 .historial { 
@@ -131,6 +149,7 @@ main {
   border: 1px solid #2a2a2a;
   border-radius: 12px;
   padding: 24px;
+  grid-row: 2 / 3;
 }
 
 .historial table{
@@ -153,7 +172,7 @@ main {
   font-size: 0.9rem;
 }
 
-.estado-PAGADO{color: #4ade80}
+.estado-PAGADA{color: #4ade80}
 .estado-CANCELADA{color: #ef4444;}
 .estado-ABIERTO{ color: #facc15;}
 
@@ -284,6 +303,50 @@ select:focus { border-color: #fdc344; }
 .btn-secondary:hover {
   background: #222;
   color: #f0f0f0;
+}
+
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal-card {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12 px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-card h2 {
+  color: #f8a859;
+}
+
+.devolucion-item{
+  display:grid ;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.devolucion-item span{
+  font-size: 0.9rem;
+
+}
+.devolucion-item input{
+  width: 70x;
+  text-align: center;
 }
 
 .btn-quitar:hover{background: #f87171;}
