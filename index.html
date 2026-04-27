@@ -71,6 +71,11 @@
         <div class="total-venta">
           <span>Total: $<span id="total-venta">0.00</span></span>
         </div>
+        <!-- justo antes de: <button id="btn-registrar-venta"> -->
+        <select id="select-metodo-venta">
+          <option value="1">💵 Efectivo</option>
+          <option value="2">🏦 Transferencia</option>
+        </select>
         <button id="btn-registrar-venta">Registrar y Cobrar</button>
         <p id="error-venta" class="error oculto"></p>
       </section>
@@ -84,14 +89,18 @@
         <p id="error-gasto" class="error oculto"></p>
       </section>
 
-      <section class="resumen-caja">
-        <h2>Resumen de Caja</h2>
-        <div id="resumen-contenido">
-          <p>Ingresos: $<span id="resumen-ingresos">0.00</span></p>
-          <p>Egresos: $<span id="resumen-egresos">0.00</span></p>
-          <p><strong>En caja: $<span id="resumen-total">0.00</span></strong></p>
-        </div>
-      </section>
+        <section class="resumen-caja">
+      <h2>Resumen de Caja</h2>
+      <div id="resumen-contenido">
+        <p>Fondo inicial: $<span id="resumen-fondo">0.00</span></p>
+        <p>Efectivo: $<span id="resumen-efectivo">0.00</span></p>
+        <p>Transferencia: $<span id="resumen-transferencia">0.00</span></p>
+        <p>Total ingresos: $<span id="resumen-ingresos">0.00</span></p>
+        <p>Total egresos: $<span id="resumen-egresos">0.00</span></p>
+        <p class="resumen-divider"></p>
+        <p class="resumen-final"><strong>En caja: $<span id="resumen-total">0.00</span></strong></p>
+      </div>
+    </section>
 
       <section id="historial-sesion" class="historial">
         <h2>Ventas de esta sesión</h2>
@@ -107,6 +116,10 @@
     <h2>Regitrar Devolucion</h2>
     <p id="modal-venta-info" style="color: #888; font-size: 0.9rem;"></p>
     <div id="modal-productos-devolucion"></div>
+    <select id="select-metodo-devolucion">
+      <option value="1">Efectivo</option>
+      <opcion value="2">Tranferencia</opcion>
+    </select>  
     <button id="btn-confirmar-devolucion">Confirmar Devolucion</button>
     <button id="btn-cancelar-devolucion" class="btn-danger">Cancelar</button>
     <p id="error-devolucion" class="error oculto"></p>

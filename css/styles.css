@@ -350,3 +350,13 @@ select:focus { border-color: #fdc344; }
 }
 
 .btn-quitar:hover{background: #f87171;}
+
+.resumen-divider { 
+  border-bottom: 1px solid #f8a859 !important;
+  padding: 0 !important;
+}
+
+.resumen-final { 
+  font-size: 1.1rem;
+  color:#f8a859;
+}

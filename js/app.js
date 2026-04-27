@@ -23,6 +23,7 @@ const irA = pantalla => {
 };
 
 window.addEventListener('load', async () => {
+  cargarProductosAdmin();
   if (sesionActual) {
     try{
       const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
@@ -40,6 +41,8 @@ window.addEventListener('load', async () => {
     cargarCatalogo();
     actualizarHistorial()
     cargarCategorias();
+    cargarMetodosPago();
+
   }catch(e){
     localStorage.removeItem('sesionactual');
     sesionActual = null ; 
@@ -49,6 +52,7 @@ window.addEventListener('load', async () => {
 });
 // --- ABRIR SESIÓN ---
 $('btn-abrir-sesion').addEventListener('click', async () => {
+  cargarProductosAdmin();
   const usuario = $('input-usuario').value.trim();
   const monto_inicial = parseFloat($('input-monto').value);
 
@@ -72,6 +76,8 @@ $('btn-abrir-sesion').addEventListener('click', async () => {
     cargarCatalogo();
     cargarCategorias();
     actualizarResumen();
+    cargarMetodosPago();
+
     
   } catch (e) {
     mostrarError('error-sesion', 'No se pudo conectar al servidor');
@@ -83,9 +89,13 @@ const actualizarResumen = async () => {
   try {
     const res = await fetch(`${API}/sesion/${sesionActual.id}/resumen`);
     const data = await res.json();
-    $('resumen-ingresos').textContent = parseFloat(data.total_ingresos).toFixed(2);
-    $('resumen-egresos').textContent = parseFloat(data.total_egresos).toFixed(2);
-    $('resumen-total').textContent = parseFloat(data.debe_haber_en_caja).toFixed(2);
+    
+    $('resumen-fondo').textContent        = parseFloat(data.monto_inicial).toFixed(2);
+    $('resumen-efectivo').textContent     = parseFloat(data.ingreso_efectivo).toFixed(2);
+    $('resumen-transferencia').textContent= parseFloat(data.ingreso_transferencia).toFixed(2);
+    $('resumen-ingresos').textContent     = parseFloat(data.total_ingresos).toFixed(2);
+    $('resumen-egresos').textContent      = parseFloat(data.total_egresos).toFixed(2);
+    $('resumen-total').textContent        = parseFloat(data.debe_haber_en_caja).toFixed(2);
   } catch (e) {
     console.error('Error al actualizar resumen', e);
   }
@@ -176,7 +186,11 @@ if (hayIdVacio) return mostrarError('error-venta', 'Todos los productos deben te
     const resPago = await fetch(`${API}/venta/${dataVenta.id_venta}/pagar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_sesion: sesionActual.id, id_metodo_pago: 1, monto: dataVenta.total })
+      body: JSON.stringify({
+         id_sesion: sesionActual.id,
+         id_metodo_pago: parseInt($('select-metodo-venta').value),
+         monto: dataVenta.total
+         })
     });
     const dataPago = await resPago.json();
     if (!resPago.ok) return mostrarError('error-venta', dataPago.error);
@@ -400,7 +414,7 @@ $('btn-confirmar-devolucion').addEventListener('click', async () => {
         id_sesion: sesionActual.id,
         motivo: 'Devolución registrada desde caja',
         productos,
-        id_metodo_pago: 1
+        id_metodo_pago: parseInt($('select-metodo-devolucion').value)
       })
     });
     const data = await res.json();
@@ -413,5 +427,141 @@ $('btn-confirmar-devolucion').addEventListener('click', async () => {
     alert(`Devolución registrada — $${data.total_devuelto} devueltos`);
   } catch (e) {
     mostrarError('error-devolucion', 'Error al conectar con el servidor');
+  }
+});
+
+const cargarMetodosPago = async() => { 
+  try{
+    const res = await fetch(`${API}/venta/metodos-pago`);
+    const metodos  =  await res.json();
+
+    const opciones = metodos.map(m =>
+      `<option value="${m.id_metodo_pago}">${m.nombre}</option>`
+    ).join('');
+
+    $('select-metodo-venta').innerHTML = opciones;
+    $('select-metodo-devolucion').innerHTML = opciones;
+
+  }catch (e) { 
+    console.error('Error al cargar metodos de pago', e);
+  }
+}; 
+// --- CRUD PRODUCTOS ---
+let productoEditandoId = null;
+
+const cargarProductosAdmin = async () => {
+  try {
+    // Traemos todos, incluyendo inactivos — para admin
+    const res = await fetch(`${API}/venta/productos?todos=1`);
+    const productos = await res.json();
+    const contenedor = $('lista-productos-admin');
+
+    if (productos.length === 0) {
+      contenedor.innerHTML = '<p class="vacio">Sin productos aún</p>';
+      return;
+    }
+
+    contenedor.innerHTML = `<div class="productos-grid">
+      ${productos.map(p => `
+        <div class="producto-card">
+          <h3>${p.nombre}</h3>
+          <span class="precio">$${parseFloat(p.precio_venta).toFixed(2)}</span>
+          <span class="costo">Costo: $${parseFloat(p.costo_produccion || 0).toFixed(2)}</span>
+          <div class="producto-card-acciones">
+            <button class="btn-editar" onclick="abrirModalEditar(${p.id_producto}, '${p.nombre}', ${p.costo_produccion}, ${p.precio_venta}, ${p.id_tipo_producto})">
+              Editar
+            </button>
+            <button class="btn-desactivar" onclick="confirmarDesactivar(${p.id_producto}, '${p.nombre}')">
+              Quitar
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  } catch (e) {
+    console.error('Error al cargar productos admin', e);
+  }
+};
+
+const cargarTiposProducto = async () => {
+  try {
+    const res = await fetch(`${API}/venta/tipos-producto`);
+    const tipos = await res.json();
+    $('prod-tipo').innerHTML = tipos.map(t =>
+      `<option value="${t.id_tipo_producto}">${t.nombre}</option>`
+    ).join('');
+  } catch (e) {
+    console.error('Error al cargar tipos', e);
+  }
+};
+
+const abrirModalNuevo = () => {
+  productoEditandoId = null;
+  $('modal-producto-titulo').textContent = 'Nuevo Producto';
+  $('prod-nombre').value  = '';
+  $('prod-costo').value   = '';
+  $('prod-precio').value  = '';
+  $('modal-producto').classList.remove('oculto');
+};
+
+const abrirModalEditar = (id, nombre, costo, precio, idTipo) => {
+  productoEditandoId = id;
+  $('modal-producto-titulo').textContent = 'Editar Producto';
+  $('prod-nombre').value  = nombre;
+  $('prod-costo').value   = costo;
+  $('prod-precio').value  = precio;
+  $('prod-tipo').value    = idTipo;
+  $('modal-producto').classList.remove('oculto');
+};
+
+const confirmarDesactivar = async (id, nombre) => {
+  if (!confirm(`¿Desactivar "${nombre}"? Ya no aparecerá en ventas.`)) return;
+  try {
+    const res = await fetch(`${API}/venta/productos/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) return alert(data.error);
+    cargarProductosAdmin();
+    cargarCatalogo(); // actualiza el selector de ventas también
+  } catch (e) {
+    alert('Error al desactivar producto');
+  }
+};
+
+$('btn-nuevo-producto').addEventListener('click', () => {
+  cargarTiposProducto().then(abrirModalNuevo);
+});
+
+$('btn-cancelar-producto').addEventListener('click', () => {
+  $('modal-producto').classList.add('oculto');
+});
+
+$('btn-guardar-producto').addEventListener('click', async () => {
+  const nombre          = $('prod-nombre').value.trim();
+  const costo_produccion = parseFloat($('prod-costo').value) || 0;
+  const precio_venta    = parseFloat($('prod-precio').value);
+  const id_tipo_producto = parseInt($('prod-tipo').value);
+
+  if (!nombre) return mostrarError('error-producto', 'El nombre es requerido');
+  if (!precio_venta || precio_venta <= 0) return mostrarError('error-producto', 'El precio debe ser mayor a cero');
+
+  const url    = productoEditandoId 
+    ? `${API}/venta/productos/${productoEditandoId}` 
+    : `${API}/venta/productos`;
+  const method = productoEditandoId ? 'PUT' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_tipo_producto, nombre, costo_produccion, precio_venta })
+    });
+    const data = await res.json();
+    if (!res.ok) return mostrarError('error-producto', data.error);
+
+    $('modal-producto').classList.add('oculto');
+    cargarProductosAdmin();
+    cargarCatalogo(); // refresca el selector en Nueva Venta
+  } catch (e) {
+    mostrarError('error-producto', 'Error al conectar con el servidor');
   }
 });
