@@ -1,131 +1,373 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>YAX — Sistema de Ventas</title>
-  <link rel="stylesheet" href="css/styles.css" />
-</head>
-<body>
-
-  <!-- PANTALLA 1: ABRIR SESIÓN -->
-  <div id="pantalla-sesion" class="pantalla activa">
-    <div class="card">
-      <h1>YAX</h1>
-      <h2>Abrir Caja</h2>
-      <input type="text" id="input-usuario" placeholder="Nombre del cajero" />
-      <input type="number" id="input-monto" placeholder="Fondo inicial ($)" min="0" />
-      <button id="btn-abrir-sesion">Abrir Sesión</button>
-      <p id="error-sesion" class="error oculto"></p>
-    </div>
-  </div>
-
-  <!-- PANTALLA 2: PANEL PRINCIPAL -->
-  <div id="pantalla-principal" class="pantalla oculto">
-    <header>
-      <span id="info-sesion">Sesión activa</span>
-      <button id="btn-cerrar-sesion" class="btn-danger">Cerrar Caja</button>
-    </header>
-
- <!-- PANTALLA 3: CIERRE DE SESIÓN -->
-<div id="pantalla-cierre" class="pantalla oculto">
-  <div class="cierre-card">
-    <h1>YAX</h1>
-    <h2>Resumen de Cierre</h2>
-
-    <div class="cierre-info">
-      <span>Cajero</span><span id="cierre-usuario">—</span>
-      <span>Sesión</span><span id="cierre-sesion">—</span>
-      <span>Inicio</span><span id="cierre-inicio">—</span>
-    </div>
-
-    <div class="cierre-numeros">
-      <div class="cierre-fila">
-        <span>Fondo inicial</span>
-        <span id="cierre-fondo">$0.00</span>
-      </div>
-      <div class="cierre-fila ingreso">
-        <span>Total ingresos</span>
-        <span id="cierre-ingresos">$0.00</span>
-      </div>
-      <div class="cierre-fila egreso">
-        <span>Total egresos</span>
-        <span id="cierre-egresos">$0.00</span>
-      </div>
-      <div class="cierre-fila total">
-        <span>Debe haber en caja</span>
-        <span id="cierre-total">$0.00</span>
+<!doctype html>
+<html lang="es" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YAX Estudio — Punto de Venta</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="pantalla-sesion" class="pantalla activa">
+      <div class="card">
+        <img
+          id="logo-login"
+          src="img/logoYAXBlack.png"
+          alt="YAX Estudio"
+          class="card-logo"
+        />
+        <h2>Abrir Caja</h2>
+        <input type="text" id="input-usuario" placeholder="Nombre del cajero" />
+        <input
+          type="number"
+          id="input-monto"
+          placeholder="Fondo inicial ($)"
+          min="0"
+        />
+        <button class="btn-primary" id="btn-abrir-sesion">Abrir Sesión</button>
+        <p id="error-sesion" class="error oculto"></p>
       </div>
     </div>
 
-    <button id="btn-confirmar-cierre">Confirmar Cierre</button>
-    <button id="btn-cancelar-cierre" class="btn-secondary">Cancelar</button>
-  </div>
-</div>
+    <div
+      class="sidebar-overlay"
+      id="sidebar-overlay"
+      onclick="cerrarMenu()"
+    ></div>
 
-    <main>
-      <section class="formulario-venta">
-        <h2>Nueva Venta</h2>
-        <div id="lista-productos"></div>
-        <button id="btn-agregar-producto">+ Agregar producto</button>
-        <div class="total-venta">
-          <span>Total: $<span id="total-venta">0.00</span></span>
+    <aside class="sidebar" id="sidebar">
+      <!-- Perfil -->
+      <div class="sb-header">
+        <div class="sb-avatar" id="sb-avatar">?</div>
+        <div class="sb-nombre" id="sb-nombre">Cajero</div>
+        <div class="sb-sesion-meta" id="sb-sesion-meta">Sesión #—</div>
+        <div class="sb-badge-activa">
+          ● Activa · <span id="sb-timer">0m</span>
         </div>
-        <!-- justo antes de: <button id="btn-registrar-venta"> -->
-        <select id="select-metodo-venta">
-          <option value="1">💵 Efectivo</option>
-          <option value="2">🏦 Transferencia</option>
-        </select>
-        <button id="btn-registrar-venta">Registrar y Cobrar</button>
-        <p id="error-venta" class="error oculto"></p>
-      </section>
+      </div>
 
-      <section class="formulario-gasto">
-         <h2>Registrar Gasto</h2>
-        <select id="select-categoria"></select>
-        <input type="number" id="input-monto-gasto" placeholder="Monto $" min="0"/>
-        <input type="text" id="input-descripcion-gasto" placeholder="Descripción (opcional)"/>
-        <button id="btn-registrar-gasto">Registrar Gasto</button>
-        <p id="error-gasto" class="error oculto"></p>
-      </section>
+      <!-- Modo -->
+      <div class="sb-section">
+        <button class="sb-item" onclick="toggleTheme()">
+          <div class="sb-icon gray" id="sb-mode-icon"></div>
+          <div>
+            <span class="sb-item-label" id="sb-mode-label">Modo oscuro</span>
+            <span class="sb-item-sub">Cambia la apariencia</span>
+          </div>
+          <div class="sb-toggle-track" id="sb-toggle-track">
+            <div class="sb-toggle-knob"></div>
+          </div>
+        </button>
+      </div>
 
+      <div class="sb-sep"></div>
+
+      <!-- Navegación -->
+      <div class="sb-section">
+        <button
+          class="sb-item"
+          onclick="
+            scrollToSection('.formulario-venta');
+            cerrarMenu();
+          "
+        >
+          <div class="sb-icon orange">
+          
+        </div>
+          <div>
+            <span class="sb-item-label">Nueva venta</span>
+            <span class="sb-item-sub">Registrar cobro</span>
+          </div>
+        </button>
+        <button
+          class="sb-item"
+          onclick="
+            scrollToSection('.resumen-caja');
+            cerrarMenu();
+          "
+        >
+          <div class="sb-icon blue"></div>
+          <div>
+            <span class="sb-item-label">Resumen de caja</span>
+            <span class="sb-item-sub">Totales del día</span>
+          </div>
+        </button>
+        <button
+          class="sb-item"
+          onclick="
+            scrollToSection('.historial');
+            cerrarMenu();
+          "
+        >
+          <div class="sb-icon gray"></div>
+          <div>
+            <span class="sb-item-label">Historial</span>
+            <span class="sb-item-sub">Ventas de esta sesión</span>
+          </div>
+        </button>
+        <button
+          class="sb-item"
+          onclick="
+            scrollToSection('#admin-productos');
+            cerrarMenu();
+          "
+        >
+          <div class="sb-icon blue"></div>
+          <div>
+            <span class="sb-item-label">Productos</span>
+            <span class="sb-item-sub">Gestionar catálogo</span>
+          </div>
+        </button>
+      </div>
+
+      <div class="sb-sep"></div>
+
+      <!-- Cerrar caja -->
+      <div class="sb-section" style="margin-top: auto; padding-bottom: 24px">
+        <button
+          class="sb-item"
+          onclick="
+            cerrarMenu();
+            document.getElementById('btn-cerrar-sesion').click();
+          "
+        >
+          <div class="sb-icon red"></div>
+          <div>
+            <span class="sb-item-label" style="color: var(--danger)"
+              >Cerrar caja</span
+            >
+            <span class="sb-item-sub">Finalizar sesión</span>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <div id="pantalla-principal" class="pantalla oculto">
+      <header>
+        <button class="hbg-btn" onclick="abrirMenu()" aria-label="Abrir menú">
+          <span class="hbg-bar"></span>
+          <span class="hbg-bar"></span>
+          <span class="hbg-bar"></span>
+        </button>
+        <img
+          id="logo-header"
+          src="img/logoYAXBlack.png"
+          alt="YAX Estudio"
+          class="header-logo"
+        />
+        <span id="info-sesion">Sesión activa</span>
+        <button id="btn-cerrar-sesion" class="btn-danger">Cerrar Caja</button>
+      </header>
+
+      <main>
+        <!-- NUEVA VENTA -->
+        <section class="formulario-venta">
+          <span class="section-label">Nueva Venta</span>
+
+          <div class="search-wrapper">
+            <input
+              type="text"
+              id="input-buscar-producto"
+              placeholder="Buscar producto..."
+              autocomplete="off"
+            />
+            <div id="search-dropdown" class="search-dropdown oculto"></div>
+          </div>
+
+          <div id="lista-productos"></div>
+
+          <div class="total-venta">
+            Total: $<span id="total-venta">0.00</span>
+          </div>
+
+          <button class="btn-primary" id="btn-registrar-venta">
+            Registrar y Cobrar
+          </button>
+          <p id="error-venta" class="error oculto"></p>
+        </section>
+
+        <!-- REGISTRAR GASTO -->
+        <section class="formulario-gasto">
+          <span class="section-label">Registrar Gasto</span>
+          <select id="select-categoria"></select>
+          <input
+            type="number"
+            id="input-monto-gasto"
+            placeholder="Monto $"
+            min="0"
+          />
+          <input
+            type="text"
+            id="input-descripcion-gasto"
+            placeholder="Descripción (opcional)"
+          />
+          <button class="btn-primary" id="btn-registrar-gasto">
+            Registrar Gasto
+          </button>
+          <p id="error-gasto" class="error oculto"></p>
+        </section>
+
+        <!-- RESUMEN DE CAJA -->
         <section class="resumen-caja">
-      <h2>Resumen de Caja</h2>
-      <div id="resumen-contenido">
-        <p>Fondo inicial: $<span id="resumen-fondo">0.00</span></p>
-        <p>Efectivo: $<span id="resumen-efectivo">0.00</span></p>
-        <p>Transferencia: $<span id="resumen-transferencia">0.00</span></p>
-        <p>Total ingresos: $<span id="resumen-ingresos">0.00</span></p>
-        <p>Total egresos: $<span id="resumen-egresos">0.00</span></p>
-        <p class="resumen-divider"></p>
-        <p class="resumen-final"><strong>En caja: $<span id="resumen-total">0.00</span></strong></p>
-      </div>
-    </section>
+          <span class="section-label">Resumen de Caja</span>
+          <p>
+            Fondo inicial <span>$<span id="resumen-fondo">0.00</span></span>
+          </p>
+          <p>
+            Efectivo <span>$<span id="resumen-efectivo">0.00</span></span>
+          </p>
+          <p>
+            Transferencia
+            <span>$<span id="resumen-transferencia">0.00</span></span>
+          </p>
+          <p>
+            Total ingresos <span>$<span id="resumen-ingresos">0.00</span></span>
+          </p>
+          <p>
+            Total egresos <span>$<span id="resumen-egresos">0.00</span></span>
+          </p>
+          <p class="resumen-divider"></p>
+          <p class="resumen-final">
+            En caja <span>$<span id="resumen-total">0.00</span></span>
+          </p>
+        </section>
 
-      <section id="historial-sesion" class="historial">
-        <h2>Ventas de esta sesión</h2>
-        <div id="lista-historial">
-          <p class="vacio">Sin ventas aún</p>
+        <!-- HISTORIAL -->
+        <section id="historial-sesion" class="historial">
+          <span class="section-label">Ventas de esta sesión</span>
+          <div id="lista-historial">
+            <p class="vacio">Sin ventas aún</p>
+          </div>
+        </section>
+
+        <!-- ADMIN PRODUCTOS -->
+        <section id="admin-productos">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <span class="section-label">Productos</span>
+            <button
+              id="btn-nuevo-producto"
+              style="width: auto; padding: 6px 14px; font-size: 0.8rem"
+              class="btn-primary"
+            >
+              + Nuevo
+            </button>
+          </div>
+          <div id="lista-productos-admin">
+            <p class="vacio">Cargando productos...</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="pantalla-cierre" class="pantalla oculto">
+      <div class="cierre-card">
+        <h1>YAX</h1>
+        <h2>Resumen de Cierre</h2>
+        <div class="cierre-info">
+          <span>Cajero</span> <span id="cierre-usuario">—</span>
+          <span>Sesión</span> <span id="cierre-sesion">—</span>
+          <span>Inicio</span> <span id="cierre-inicio">—</span>
         </div>
-      </section>
-    </main>
-  </div>
+        <div class="cierre-numeros">
+          <div class="cierre-fila">
+            <span>Fondo inicial</span> <span id="cierre-fondo">$0.00</span>
+          </div>
+          <div class="cierre-fila ingreso">
+            <span>Total ingresos</span> <span id="cierre-ingresos">$0.00</span>
+          </div>
+          <div class="cierre-fila egreso">
+            <span>Total egresos</span> <span id="cierre-egresos">$0.00</span>
+          </div>
+          <div class="cierre-fila total">
+            <span>Debe haber en caja</span> <span id="cierre-total">$0.00</span>
+          </div>
+        </div>
+        <button class="btn-primary" id="btn-confirmar-cierre">
+          Confirmar Cierre
+        </button>
+        <button class="btn-secondary" id="btn-cancelar-cierre">Cancelar</button>
+      </div>
+    </div>
 
-<div id="modal-devolucion" class="modal-overlay oculto">
-  <div class="modal-card">
-    <h2>Regitrar Devolucion</h2>
-    <p id="modal-venta-info" style="color: #888; font-size: 0.9rem;"></p>
-    <div id="modal-productos-devolucion"></div>
-    <select id="select-metodo-devolucion">
-      <option value="1">Efectivo</option>
-      <opcion value="2">Tranferencia</opcion>
-    </select>  
-    <button id="btn-confirmar-devolucion">Confirmar Devolucion</button>
-    <button id="btn-cancelar-devolucion" class="btn-danger">Cancelar</button>
-    <p id="error-devolucion" class="error oculto"></p>
-  </div>
-</div>
+    <div id="modal-pago" class="modal-overlay oculto">
+      <div class="modal-card">
+        <h2>¿Cómo va a pagar?</h2>
+        <p class="pago-total" id="modal-pago-total">$0.00</p>
+        <div class="metodos-grid">
+          <button
+            class="metodo-btn"
+            data-id="1"
+            onclick="seleccionarMetodoPago(1)"
+          >
+            <span class="metodo-icon"></span>
+            Efectivo
+          </button>
+          <button
+            class="metodo-btn"
+            data-id="2"
+            onclick="seleccionarMetodoPago(2)"
+          >
+            <span class="metodo-icon"></span>
+            Transferencia
+          </button>
+        </div>
+        <button class="btn-primary" id="btn-confirmar-pago">Confirmar</button>
+        <button class="btn-secondary" onclick="cerrarModalPago()">
+          Cancelar
+        </button>
+        <p id="error-pago" class="error oculto"></p>
+      </div>
+    </div>
 
-  <script src="js/app.js"></script>
-</body>
+    <div id="modal-devolucion" class="modal-overlay oculto">
+      <div class="modal-card">
+        <h2>Registrar Devolución</h2>
+        <p
+          id="modal-venta-info"
+          style="font-size: 0.82rem; color: var(--text-2)"
+        ></p>
+        <div id="modal-productos-devolucion"></div>
+        <select id="select-metodo-devolucion"></select>
+        <button class="btn-primary" id="btn-confirmar-devolucion">
+          Confirmar Devolución
+        </button>
+        <button class="btn-secondary" id="btn-cancelar-devolucion">
+          Cancelar
+        </button>
+        <p id="error-devolucion" class="error oculto"></p>
+      </div>
+    </div>
+
+    <div id="modal-producto" class="modal-overlay oculto">
+      <div class="modal-card">
+        <h2 id="modal-producto-titulo">Nuevo Producto</h2>
+        <select id="prod-tipo"></select>
+        <input type="text" id="prod-nombre" placeholder="Nombre del producto" />
+        <input
+          type="number"
+          id="prod-costo"
+          placeholder="Costo de producción $"
+          min="0"
+        />
+        <input
+          type="number"
+          id="prod-precio"
+          placeholder="Precio de venta $"
+          min="0"
+        />
+        <button class="btn-primary" id="btn-guardar-producto">Guardar</button>
+        <button class="btn-secondary" id="btn-cancelar-producto">
+          Cancelar
+        </button>
+        <p id="error-producto" class="error oculto"></p>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
 </html>
